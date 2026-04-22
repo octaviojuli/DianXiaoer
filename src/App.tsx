@@ -48,7 +48,7 @@ const MOCK_WORK_ORDERS: WorkOrder[] = [
 ];
 
 export default function App() {
-  const [currentPage, setCurrentPage] = useState<'HOME' | 'CREATE' | 'ANALYSIS' | 'SCHEMES' | '9_9_PAY' | 'DEEP_CUSTOM' | 'DEPOSIT' | 'PDF' | 'ITINERARY_EDIT'>('CREATE');
+  const [currentPage, setCurrentPage] = useState<'HOME' | 'CREATE' | 'ANALYSIS' | 'SCHEMES' | '9_9_PAY' | 'DEEP_CUSTOM' | 'DEPOSIT' | 'PDF' | 'ITINERARY_EDIT'>('HOME');
   const [selectedOrder, setSelectedOrder] = useState<WorkOrder | null>(null);
   const [orders, setOrders] = useState<WorkOrder[]>(MOCK_WORK_ORDERS);
   const [activeDay, setActiveDay] = useState(1);
@@ -74,19 +74,66 @@ export default function App() {
 
       <div className="px-6 mt-6">
         <section className="mt-8">
-          <div className="bg-white rounded-[32px] p-10 border border-stone-200 shadow-sm text-center">
-            <div className="w-16 h-16 bg-stone-50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-brand-ink border border-stone-100">
-              <PlusCircle className="w-8 h-8" />
+          {orders.length > 0 ? (
+            <div className="space-y-4">
+              <div className="flex justify-between items-end mb-6 border-b border-stone-100 pb-2">
+                <h2 className="text-[11px] font-black text-stone-400 uppercase tracking-[0.2em]">进行中的项目</h2>
+                <span className="text-[10px] font-bold text-stone-300">{orders.length} 待办</span>
+              </div>
+              {orders.map(order => (
+                <div key={order.id} className="bg-white rounded-[24px] p-6 border border-stone-200 shadow-sm flex flex-col gap-4 relative overflow-hidden group">
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-brand-gold opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <h3 className="text-lg font-black text-brand-ink">{order.customerName}</h3>
+                      <p className="text-[11px] text-stone-400 font-bold uppercase tracking-widest mt-1">{order.id} · {order.customerContact}</p>
+                    </div>
+                    <div className="px-3 py-1.5 rounded-lg bg-stone-50 border border-stone-100 text-[9px] font-black uppercase tracking-[0.2em] text-brand-ink flex items-center gap-1.5 shadow-sm">
+                      <div className="w-1.5 h-1.5 rounded-full bg-brand-gold"></div>
+                      {order.status === 'DIRECTIONAL_SCHEMES' && '意向沟通中'}
+                      {order.status === '9_9_PAYMENT' && '待付意向金'}
+                      {order.status === 'DEEP_CUSTOM' && '深度定制中'}
+                      {order.status === 'DEPOSIT' && '待付定金'}
+                      {order.status === 'COMPLETED' && '已定案'}
+                    </div>
+                  </div>
+                  <div className="text-[12px] text-stone-500 italic line-clamp-1 bg-stone-50 p-3 rounded-xl border border-stone-100">
+                    "{order.demandSources[0]?.content}"
+                  </div>
+                  <div className="flex justify-between items-center pt-3 border-t border-stone-50 mt-1">
+                    <span className="text-[10px] text-stone-400 font-bold uppercase tracking-widest leading-none">{order.createdAt}</span>
+                    <button 
+                      onClick={() => {
+                        setSelectedOrder(order);
+                        if(order.status === 'DIRECTIONAL_SCHEMES') setCurrentPage('SCHEMES');
+                        else if(order.status === '9_9_PAYMENT') setCurrentPage('9_9_PAY');
+                        else if(order.status === 'DEEP_CUSTOM') setCurrentPage('DEEP_CUSTOM');
+                        else if(order.status === 'DEPOSIT') setCurrentPage('DEPOSIT');
+                        else setCurrentPage('SCHEMES');
+                      }}
+                      className="text-[11px] font-black text-brand-ink flex items-center gap-1 uppercase tracking-widest active:scale-95 transition-transform"
+                    >
+                      继续跟进 <ChevronRight className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </div>
+              ))}
             </div>
-            <h2 className="text-xl font-serif italic text-brand-ink mb-2">暂无待办工单</h2>
-            <p className="text-[12px] text-stone-400 font-medium uppercase tracking-widest mb-8">开始收集客户信息以开启定制</p>
-            <button 
-              onClick={() => setCurrentPage('CREATE')}
-              className="w-full bg-brand-ink text-white py-4 rounded-xl font-bold uppercase tracking-widest text-[11px] shadow-lg active:scale-95 transition-all"
-            >
-              新建客户需求
-            </button>
-          </div>
+          ) : (
+            <div className="bg-white rounded-[32px] p-10 border border-stone-200 shadow-sm text-center">
+              <div className="w-16 h-16 bg-stone-50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-brand-ink border border-stone-100">
+                <PlusCircle className="w-8 h-8" />
+              </div>
+              <h2 className="text-xl font-serif italic text-brand-ink mb-2">暂无待办工单</h2>
+              <p className="text-[12px] text-stone-400 font-medium uppercase tracking-widest mb-8">开始收集客户信息以开启定制</p>
+              <button 
+                onClick={() => setCurrentPage('CREATE')}
+                className="w-full bg-brand-ink text-white py-4 rounded-xl font-bold uppercase tracking-widest text-[11px] shadow-lg active:scale-95 transition-all"
+              >
+                新建客户需求
+              </button>
+            </div>
+          )}
         </section>
       </div>
 
