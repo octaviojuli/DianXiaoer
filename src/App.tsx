@@ -48,9 +48,10 @@ const MOCK_WORK_ORDERS: WorkOrder[] = [
 ];
 
 export default function App() {
-  const [currentPage, setCurrentPage] = useState<'HOME' | 'CREATE' | 'ANALYSIS' | 'SCHEMES' | '9_9_PAY' | 'DEEP_CUSTOM' | 'DEPOSIT' | 'PDF'>('HOME');
+  const [currentPage, setCurrentPage] = useState<'HOME' | 'CREATE' | 'ANALYSIS' | 'SCHEMES' | '9_9_PAY' | 'DEEP_CUSTOM' | 'DEPOSIT' | 'PDF' | 'ITINERARY_EDIT'>('CREATE');
   const [selectedOrder, setSelectedOrder] = useState<WorkOrder | null>(null);
   const [orders, setOrders] = useState<WorkOrder[]>(MOCK_WORK_ORDERS);
+  const [activeDay, setActiveDay] = useState(1);
 
   // Transitions
   const pageVariants = {
@@ -72,59 +73,19 @@ export default function App() {
       </header>
 
       <div className="px-6 mt-6">
-        <div className="bg-stone-50 rounded-2xl p-4 flex items-center gap-3 border border-stone-200 mb-8">
-          <Search className="w-5 h-5 text-stone-400" />
-          <input type="text" placeholder="搜索订单或客户" className="bg-transparent border-none outline-none text-sm w-full placeholder:text-stone-300" />
-        </div>
-
-        <section>
-          <div className="flex items-center justify-between mb-6 border-b border-stone-100 pb-2">
-            <h2 className="font-serif text-lg italic uppercase tracking-wider text-brand-ink">待办工单 <span className="text-[12px] font-sans italic lowercase opacity-50">({orders.length} items)</span></h2>
-            <button className="text-[10px] bg-stone-100 px-2 py-1 rounded font-bold uppercase tracking-widest">View All</button>
-          </div>
-
-          <div className="space-y-4">
-            {orders.map((order) => (
-              <motion.div 
-                key={order.id}
-                whileTap={{ scale: 0.98 }}
-                onClick={() => {
-                  setSelectedOrder(order);
-                  setCurrentPage('SCHEMES');
-                }}
-                className="bg-white border border-stone-200 rounded-3xl p-6 shadow-sm active:shadow-md transition-all group"
-              >
-                <div className="flex justify-between items-start mb-4">
-                  <div className="flex items-center gap-2">
-                    <div className="bg-brand-green text-white text-[9px] font-bold px-3 py-1 rounded-full uppercase tracking-widest shadow-sm">
-                      {order.status.replace(/_/g, ' ')}
-                    </div>
-                    <span className="text-[10px] text-stone-400 font-medium uppercase tracking-tighter">{order.createdAt}</span>
-                  </div>
-                  <ChevronRight className="w-4 h-4 text-stone-300 group-hover:text-brand-ink transition-colors" />
-                </div>
-                <h3 className="text-lg font-bold text-brand-ink mb-1">{order.customerName} 的定制需求</h3>
-                <div className="flex items-center gap-4 text-[11px] text-stone-500 font-medium italic">
-                  <div className="flex items-center gap-1.5 uppercase tracking-wide not-italic font-bold text-[10px]">
-                    <Users className="w-3 h-3" /> 小包团
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <MessageSquare className="w-3 h-3" /> Source: {order.demandSources[0].type}
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </section>
-
-        <section className="mt-12 mb-10">
-          <h2 className="text-[10px] font-bold uppercase tracking-widest text-stone-400 mb-6">种子目的地样品词条</h2>
-          <div className="flex gap-3 overflow-x-auto pb-4 no-scrollbar">
-            {['北京', '厦门', '西藏', '新疆', '欧洲'].map(city => (
-              <div key={city} className="flex-shrink-0 px-8 py-4 rounded-2xl bg-white border border-stone-200 text-sm font-bold shadow-sm hover:border-brand-ink transition-all">
-                {city}
-              </div>
-            ))}
+        <section className="mt-8">
+          <div className="bg-white rounded-[32px] p-10 border border-stone-200 shadow-sm text-center">
+            <div className="w-16 h-16 bg-stone-50 rounded-2xl flex items-center justify-center mx-auto mb-6 text-brand-ink border border-stone-100">
+              <PlusCircle className="w-8 h-8" />
+            </div>
+            <h2 className="text-xl font-serif italic text-brand-ink mb-2">暂无待办工单</h2>
+            <p className="text-[12px] text-stone-400 font-medium uppercase tracking-widest mb-8">开始收集客户信息以开启定制</p>
+            <button 
+              onClick={() => setCurrentPage('CREATE')}
+              className="w-full bg-brand-ink text-white py-4 rounded-xl font-bold uppercase tracking-widest text-[11px] shadow-lg active:scale-95 transition-all"
+            >
+              新建客户需求
+            </button>
           </div>
         </section>
       </div>
@@ -141,7 +102,7 @@ export default function App() {
           <div className="w-14 h-14 bg-brand-ink rounded-2xl flex items-center justify-center shadow-xl text-white rotate-45 group transition-transform active:scale-90">
             <PlusCircle className="w-7 h-7 -rotate-45" />
           </div>
-          <span className="text-[10px] font-black uppercase tracking-widest mt-3 text-brand-ink">NEW</span>
+          <span className="text-[10px] font-black uppercase tracking-widest mt-3 text-brand-ink">新增</span>
         </button>
         <button className="flex flex-col items-center gap-1.5 text-stone-400">
           <div className="w-1.5 h-1.5 bg-transparent rounded-full mb-1"></div>
@@ -162,21 +123,25 @@ export default function App() {
 
       <div className="px-6 mt-8 space-y-8">
         <div className="bg-white rounded-[32px] p-8 border border-stone-200 shadow-sm">
-          <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-stone-400 mb-2 block">
-            客户称呼 / 项目名称
-          </label>
-          <input type="text" placeholder="如：北京暑期亲子研学游" className="w-full text-xl font-bold border-b border-stone-100 py-4 focus:border-brand-ink transition-colors outline-none pb-4 placeholder:text-stone-200" />
-          
-          <div className="mt-10">
-            <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-stone-400 mb-4 block">
-              种子目的地 (SELECTED)
-            </label>
-            <div className="flex flex-wrap gap-3">
-              {['北京', '厦门', '欧洲', '新疆'].map(tag => (
-                <button key={tag} className="px-5 py-2.5 rounded-xl bg-stone-50 border border-stone-200 text-[12px] font-bold uppercase tracking-wider hover:bg-brand-ink hover:text-white transition-all">
-                  {tag}
-                </button>
-              ))}
+          <p className="text-[10px] font-bold text-stone-400 uppercase tracking-[0.3em] mb-8">客户核心信息采集</p>
+          <div className="space-y-8">
+            <div className="border-b border-stone-100 pb-4">
+              <label className="text-[10px] font-bold text-stone-300 uppercase tracking-widest block mb-2">客户姓名 / 称呼</label>
+              <input type="text" placeholder="请输入客户姓名" className="w-full bg-transparent text-lg font-bold text-brand-ink outline-none border-none placeholder:text-stone-200" />
+            </div>
+            <div className="border-b border-stone-100 pb-4">
+              <label className="text-[10px] font-bold text-stone-300 uppercase tracking-widest block mb-2">联系电话 / 微信</label>
+              <input type="text" placeholder="用于同步方案" className="w-full bg-transparent text-lg font-bold text-brand-ink outline-none border-none placeholder:text-stone-200" />
+            </div>
+            <div className="grid grid-cols-2 gap-8">
+              <div className="border-b border-stone-100 pb-4">
+                <label className="text-[10px] font-bold text-stone-300 uppercase tracking-widest block mb-2">出行人数</label>
+                <input type="number" placeholder="2" className="w-full bg-transparent text-lg font-bold text-brand-ink outline-none border-none placeholder:text-stone-200" />
+              </div>
+              <div className="border-b border-stone-100 pb-4">
+                <label className="text-[10px] font-bold text-stone-300 uppercase tracking-widest block mb-2">预算范围</label>
+                <input type="text" placeholder="2-3W" className="w-full bg-transparent text-lg font-bold text-brand-ink outline-none border-none placeholder:text-stone-200" />
+              </div>
             </div>
           </div>
         </div>
@@ -206,7 +171,7 @@ export default function App() {
             </div>
             <div>
               <p className="text-[12px] font-bold text-brand-ink uppercase tracking-wider">点击或拖拽上传</p>
-              <p className="text-[10px] text-stone-400 mt-1 uppercase tracking-tighter">Support: PDF, JPEG, PNG, DOCX</p>
+              <p className="text-[10px] text-stone-400 mt-1 uppercase tracking-tighter">支持格式: PDF, JPEG, PNG, DOCX</p>
             </div>
           </div>
         </div>
@@ -243,28 +208,28 @@ export default function App() {
             <div className="w-6 h-6 bg-brand-green rounded-sm flex items-center justify-center">
               <ShieldCheck className="w-4 h-4 text-white" />
             </div>
-            <h2 className="text-sm font-bold tracking-[0.3em] uppercase text-stone-400">Demand Summary</h2>
+            <h2 className="text-sm font-bold tracking-[0.3em] uppercase text-stone-400">需求摘要</h2>
           </div>
           
           <div className="grid grid-cols-2 gap-x-10 gap-y-10">
             <div>
-              <p className="text-[9px] font-bold tracking-[0.2em] text-stone-500 uppercase mb-2">Destination</p>
+              <p className="text-[9px] font-bold tracking-[0.2em] text-stone-500 uppercase mb-2">目的地</p>
               <p className="text-xl font-serif italic text-white leading-tight">厦门 (鼓浪屿)</p>
             </div>
             <div>
-              <p className="text-[9px] font-bold tracking-[0.2em] text-stone-500 uppercase mb-2">Origin</p>
+              <p className="text-[9px] font-bold tracking-[0.2em] text-stone-500 uppercase mb-2">出发地</p>
               <p className="text-xl font-serif italic text-white leading-tight">北京总部</p>
             </div>
             <div>
-              <p className="text-[9px] font-bold tracking-[0.2em] text-stone-500 uppercase mb-2">Budget</p>
+              <p className="text-[9px] font-bold tracking-[0.2em] text-stone-500 uppercase mb-2">预算</p>
               <p className="text-xl font-serif italic text-white leading-tight">¥ 1.5 - 2.0W</p>
             </div>
             <div>
-              <p className="text-[9px] font-bold tracking-[0.2em] text-stone-500 uppercase mb-2">Duration</p>
+              <p className="text-[9px] font-bold tracking-[0.2em] text-stone-500 uppercase mb-2">天数</p>
               <p className="text-xl font-serif italic text-white leading-tight">5 Days</p>
             </div>
             <div className="col-span-2 pt-6 border-t border-white/5">
-              <p className="text-[9px] font-bold tracking-[0.2em] text-stone-500 uppercase mb-4">Core Preferences</p>
+              <p className="text-[9px] font-bold tracking-[0.2em] text-stone-500 uppercase mb-4">核心偏好</p>
               <div className="flex flex-wrap gap-2.5">
                 {['亲子友好', '不想太赶', '海景酒店', '闽南美食'].map(p => (
                   <span key={p} className="text-[10px] font-bold uppercase tracking-widest border border-white/20 px-4 py-1.5 rounded-full text-white/70">{p}</span>
@@ -276,7 +241,7 @@ export default function App() {
 
         <div className="mt-16">
           <div className="flex items-center justify-between mb-8 border-b border-stone-100 pb-2">
-            <h3 className="font-serif text-xl italic text-brand-ink uppercase tracking-tight">AI 规划方案 <span className="text-xs font-sans not-italic font-bold text-stone-300 ml-2">Directional V.1</span></h3>
+            <h3 className="font-serif text-xl italic text-brand-ink uppercase tracking-tight">AI 规划方案 <span className="text-xs font-sans not-italic font-bold text-stone-300 ml-2">初稿版本 V.1</span></h3>
           </div>
 
           <div className="space-y-6">
@@ -361,7 +326,7 @@ export default function App() {
                   <div className="w-px flex-1 bg-stone-100 -my-1"></div>
                 </div>
                 <div className="pb-8">
-                  <p className="text-[11px] font-black text-brand-ink uppercase tracking-widest mb-2">Day 1 Arrival</p>
+                  <p className="text-[11px] font-black text-brand-ink uppercase tracking-widest mb-2">第一天 抵达</p>
                   <p className="text-[13px] text-stone-500 leading-relaxed italic">头等舱保姆车接机，入住鼓浪屿私享别墅，看一场绝美落日。</p>
                 </div>
               </div>
@@ -371,7 +336,7 @@ export default function App() {
                   <div className="w-px flex-1 bg-stone-100 -my-1"></div>
                 </div>
                 <div className="pb-8">
-                  <p className="text-[11px] font-black text-stone-300 uppercase tracking-widest mb-2">Day 2 Exploration</p>
+                  <p className="text-[11px] font-black text-stone-300 uppercase tracking-widest mb-2">第二天 探索</p>
                   <p className="text-[13px] text-stone-300 leading-relaxed">专属导览漫步钢琴岛，走进非遗漆线雕，夜晚欣赏海上歌剧。</p>
                 </div>
               </div>
@@ -380,14 +345,20 @@ export default function App() {
         </div>
 
         <div className="mt-10 flex gap-4 overflow-x-auto no-scrollbar pb-6 px-1">
-          <button className="flex-shrink-0 px-8 py-5 rounded-2xl bg-brand-ink text-white font-bold text-[12px] uppercase tracking-widest flex items-center gap-3 shadow-xl">
-            Selected A <CheckCircle2 className="w-4 h-4 text-brand-gold" />
+          <button className="flex-shrink-0 px-8 py-5 rounded-2xl bg-brand-ink text-white font-bold text-[12px] uppercase tracking-widest flex items-center gap-3 shadow-xl cursor-default">
+            已选 A <CheckCircle2 className="w-4 h-4 text-brand-gold" />
           </button>
-          <button className="flex-shrink-0 px-8 py-5 rounded-2xl bg-white border border-stone-200 text-stone-400 font-bold text-[12px] uppercase tracking-widest hover:text-brand-ink hover:border-brand-ink transition-all">
-            Sch. B
+          <button 
+            onClick={() => window.location.href = 'https://www.fliggy.com'}
+            className="flex-shrink-0 px-8 py-5 rounded-2xl bg-white border border-stone-200 text-stone-400 font-bold text-[12px] uppercase tracking-widest hover:text-brand-ink hover:border-brand-ink transition-all active:scale-95"
+          >
+            方案 B
           </button>
-          <button className="flex-shrink-0 px-8 py-5 rounded-2xl bg-white border border-stone-200 text-stone-400 font-bold text-[12px] uppercase tracking-widest hover:text-brand-ink hover:border-brand-ink transition-all">
-            Sch. C
+          <button 
+            onClick={() => window.location.href = 'https://www.ctrip.com'}
+            className="flex-shrink-0 px-8 py-5 rounded-2xl bg-white border border-stone-200 text-stone-400 font-bold text-[12px] uppercase tracking-widest hover:text-brand-ink hover:border-brand-ink transition-all active:scale-95"
+          >
+            方案 C
           </button>
         </div>
       </div>
@@ -426,7 +397,7 @@ export default function App() {
         </p>
 
         <div className="w-full bg-white rounded-[32px] p-10 mt-16 border border-stone-200 shadow-xl relative">
-          <div className="absolute top-0 left-10 -mt-4 bg-brand-ink text-white text-[9px] px-4 py-2 rounded-full font-black uppercase tracking-widest">Order Details</div>
+          <div className="absolute top-0 left-10 -mt-4 bg-brand-ink text-white text-[9px] px-4 py-2 rounded-full font-black uppercase tracking-widest">订单详情</div>
           
           <div className="flex justify-between items-center mb-8">
             <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">服务类别</span>
@@ -434,11 +405,11 @@ export default function App() {
           </div>
           <div className="flex justify-between items-center mb-8">
             <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">执行顾问</span>
-            <span className="text-sm font-bold text-brand-ink">Consultant Henry</span>
+            <span className="text-sm font-bold text-brand-ink">顾问 Henry</span>
           </div>
           <div className="h-px bg-stone-100 mb-8"></div>
           <div className="flex justify-between items-center">
-            <span className="text-sm font-bold text-brand-ink uppercase tracking-tighter">Amount Due</span>
+            <span className="text-sm font-bold text-brand-ink uppercase tracking-tighter">应付金额</span>
             <span className="text-4xl font-serif italic font-black text-brand-ink">¥ 9.90</span>
           </div>
         </div>
@@ -472,14 +443,17 @@ export default function App() {
         </div>
         <div className="flex items-center gap-3 bg-brand-green/10 px-4 py-1.5 rounded-full text-brand-green text-[10px] font-black tracking-widest uppercase border border-brand-green/20">
           <div className="w-1.5 h-1.5 bg-brand-green rounded-full animate-pulse"></div>
-          Manual Editing
+          顾问人工编辑中
         </div>
       </header>
 
       <div className="px-6 mt-8 space-y-8">
         <div className="bg-white rounded-[32px] p-8 border border-stone-200 shadow-sm relative">
           <div className="absolute top-8 right-8 flex gap-2">
-            <button className="w-10 h-10 rounded-2xl bg-stone-50 border border-stone-100 flex items-center justify-center text-stone-400 hover:text-brand-ink transition-colors">
+            <button 
+              onClick={() => setCurrentPage('ITINERARY_EDIT')}
+              className="w-10 h-10 rounded-2xl bg-stone-50 border border-stone-100 flex items-center justify-center text-stone-400 hover:text-brand-ink hover:border-brand-ink transition-all shadow-sm"
+            >
               <Edit3 className="w-5 h-5" />
             </button>
           </div>
@@ -513,7 +487,7 @@ export default function App() {
             <div className="w-8 h-8 opacity-20 bg-white rounded-lg flex items-center justify-center">
               <Sparkles className="w-5 h-5 text-white" />
             </div>
-            <p className="text-[10px] font-bold text-stone-500 uppercase tracking-[0.3em]">AI Expression Polishing</p>
+            <p className="text-[10px] font-bold text-stone-500 uppercase tracking-[0.3em]">AI 润色修辞</p>
           </div>
           <h3 className="text-white font-serif italic text-lg leading-relaxed mb-6">
             我们将为您打造一场“时空穿梭”的岛屿奢旅。不仅是脚步的丈量，更是灵魂在繁花与海浪间的共鸣...
@@ -529,15 +503,15 @@ export default function App() {
           <p className="text-[10px] font-bold text-stone-400 uppercase tracking-[0.3em] mb-6">正式报价单组装 (CNY)</p>
           <div className="space-y-6">
             <div className="flex justify-between items-center py-4 border-b border-stone-50">
-              <span className="text-[11px] font-black text-brand-ink uppercase tracking-tight">ADULT x 2</span>
+              <span className="text-[11px] font-black text-brand-ink uppercase tracking-tight">成人 x 2</span>
               <input type="number" defaultValue={8800} className="w-32 text-right font-serif italic text-xl text-brand-ink outline-none bg-transparent" />
             </div>
             <div className="flex justify-between items-center py-4 border-b border-stone-50">
-              <span className="text-[11px] font-black text-brand-ink uppercase tracking-tight">CHILD x 1</span>
+              <span className="text-[11px] font-black text-brand-ink uppercase tracking-tight">儿童 x 1</span>
               <input type="number" defaultValue={4200} className="w-32 text-right font-serif italic text-xl text-brand-ink outline-none bg-transparent" />
             </div>
             <div className="flex justify-between items-center pt-8">
-              <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">Total Price</span>
+              <span className="text-[10px] font-bold text-stone-400 uppercase tracking-widest">总价合计</span>
               <span className="text-3xl font-black text-brand-ink italic font-serif">¥ 21,800</span>
             </div>
           </div>
@@ -576,16 +550,16 @@ export default function App() {
       <div className="w-full bg-white/5 rounded-[40px] p-10 border border-white/10 mb-16 z-10 shadow-2xl backdrop-blur-md relative overflow-hidden">
         <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rotate-45 -mr-16 -mt-16"></div>
         <div className="flex flex-col gap-2 mb-10">
-          <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em]">Final Preview</span>
+          <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em]">最终预览</span>
           <h3 className="text-2xl font-serif italic text-white">厦门慢活 5日 尊享私团</h3>
         </div>
         <div className="flex justify-between items-end">
           <div className="flex flex-col gap-1">
-            <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em]">Required Deposit</span>
+            <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.4em]">待付定金</span>
             <span className="text-5xl font-serif italic font-black text-white">¥ 5,000</span>
           </div>
           <div className="px-4 py-2 rounded-xl bg-brand-gold text-brand-ink text-[10px] font-black uppercase tracking-[0.2em] shadow-lg">
-            Finalized
+            已定案
           </div>
         </div>
       </div>
@@ -610,69 +584,364 @@ export default function App() {
     </div>
   );
 
-  const renderPDFPreview = () => (
-    <div className="min-h-screen bg-brand-bg">
+  const [activePdfPage, setActivePdfPage] = useState(1);
+
+  const renderPDFPreview = () => {
+    const totalPages = 5;
+    
+    const renderPageContent = () => {
+      switch(activePdfPage) {
+        case 1: // Cover
+          return (
+            <div className="flex flex-col h-full">
+              <div className="flex justify-between items-start mb-12">
+                <div className="font-serif italic text-4xl text-stone-100 select-none">LUBAO</div>
+                <div className="text-[9px] font-black text-stone-300 uppercase tracking-[0.4em] transform rotate-90 origin-right -mt-2">2024 季度</div>
+              </div>
+              <div className="flex-1">
+                <span className="text-[10px] font-black text-brand-gold uppercase tracking-[0.5em] mb-4 block border-b border-stone-50 pb-2">尊享限定版本</span>
+                <h1 className="text-4xl font-light tracking-tighter leading-[0.95] mb-8 text-brand-ink font-serif italic">
+                  岛屿之诗：<br/>
+                  <span className="font-black not-italic text-3xl">小包团深度漫行</span>
+                </h1>
+                <div className="w-8 h-px bg-brand-ink mb-4"></div>
+                <p className="text-[10px] text-stone-400 font-bold italic tracking-tighter">专为 李先生及其家人 制作</p>
+              </div>
+              <div className="mt-auto pt-6 border-t border-stone-100">
+                <div className="flex justify-between items-end text-[10px]">
+                  <div>
+                    <p className="text-[8px] font-black text-stone-300 uppercase tracking-[0.5em] mb-1">目的地</p>
+                    <p className="font-black tracking-tight text-brand-ink uppercase">福建 厦门</p>
+                  </div>
+                  <div>
+                    <p className="text-[8px] font-black text-stone-300 uppercase tracking-[0.5em] mb-1">周期</p>
+                    <p className="font-black tracking-tight text-brand-ink uppercase">5天 行程计划</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        case 2: // Welcome Message
+          return (
+            <div className="flex flex-col h-full text-brand-ink overflow-hidden">
+              <p className="text-[8px] font-black text-stone-300 uppercase tracking-[0.4em] mb-8">致 远方的客人 / WELCOME</p>
+              <h2 className="text-2xl font-serif italic mb-6 leading-tight">致 李先生的一封信</h2>
+              <div className="space-y-4 text-[12px] font-medium leading-relaxed italic text-stone-500 overflow-y-auto no-scrollbar pb-4">
+                <p>在这个喧嚣的世界，我们总在寻找一片能让灵魂栖息的净土。厦门，这座被海风吻过的岛屿，正是我们为您挑选的答案。</p>
+                <p>我们避开了常规的打卡路径，邀请您走进那些被时光遗忘的老洋楼，在鼓浪屿的晨曦中听一场私人的钢琴独奏，在傍晚的别墅露台看金辉下的红砖绿瓦。</p>
+                <p>这不仅仅是一次旅行，更是一场关于“慢”的艺术实践。万物已备，只待您启。</p>
+              </div>
+              <div className="mt-auto flex justify-between items-end border-t border-stone-50 pt-6">
+                <div>
+                  <p className="text-[9px] font-black text-stone-300 uppercase tracking-widest mb-1">执行顾问助理</p>
+                  <p className="text-[12px] font-serif italic font-black">Henry Zhang</p>
+                </div>
+                <div className="w-10 h-10 rounded-full border border-stone-100 flex items-center justify-center">
+                  <CheckCircle2 className="w-5 h-5 text-brand-gold" />
+                </div>
+              </div>
+            </div>
+          );
+        case 3: // Daily Highlight Grid
+          return (
+            <div className="flex flex-col h-full text-brand-ink">
+              <p className="text-[8px] font-black text-stone-300 uppercase tracking-[0.4em] mb-8">行程全景预览 / ITINERARY</p>
+              <div className="space-y-6 flex-1 overflow-y-auto no-scrollbar pr-1">
+                {[
+                  { day: '01', title: '海风入梦', desc: '领航员接机，入住私密别墅' },
+                  { day: '02', title: '琴岛私享', desc: '清晨避开人潮的私谧漫行' },
+                  { day: '03', title: '非遗记忆', desc: '漆线雕艺术工坊现场体验' },
+                  { day: '04', title: '自然回音', desc: '环岛路帆船出海，拥抱深蓝' }
+                ].map((item, i) => (
+                  <div key={i} className="flex gap-4 items-start border-l border-stone-100 pl-4 relative">
+                    <div className="absolute -left-[3px] top-0 w-1.5 h-1.5 rounded-full bg-brand-gold"></div>
+                    <div>
+                      <span className="text-[8px] font-black text-stone-300">第 {item.day} 天</span>
+                      <h4 className="text-[12px] font-black mb-0.5">{item.title}</h4>
+                      <p className="text-[10px] text-stone-400 italic leading-snug">{item.desc}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="mt-6 h-24 bg-stone-50 rounded-xl overflow-hidden relative">
+                <img src="https://picsum.photos/seed/travel/400/200" className="w-full h-full object-cover opacity-30 saturate-0" referrerPolicy="no-referrer" />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <p className="text-[8px] font-black uppercase tracking-[0.5em] text-brand-ink">探索更多之旅 / Explore</p>
+                </div>
+              </div>
+            </div>
+          );
+        case 4: // Accommodation Feature
+          return (
+             <div className="flex flex-col h-full text-brand-ink">
+              <p className="text-[8px] font-black text-stone-300 uppercase tracking-[0.4em] mb-8">下榻美学 / ACCOMMODATION</p>
+              <div className="overflow-hidden rounded-2xl mb-4 shadow-lg h-40">
+                <img src="https://picsum.photos/seed/hotel/600/600" className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+              </div>
+              <h3 className="text-xl font-serif italic mb-2 leading-tight">鼓浪屿悦榕庄</h3>
+              <p className="text-[9px] font-bold text-brand-gold uppercase tracking-[0.2em] mb-4">私密别墅区 · 私人管家服务</p>
+              <p className="text-[11px] font-medium leading-relaxed italic text-stone-500 line-clamp-3 mb-6">
+                我们为您精心挑选了位于核心地段的私密独栋别墅。不仅能避开日间喧嚣，更能独享一整晚的海浪声。
+              </p>
+              <div className="mt-auto grid grid-cols-2 gap-3">
+                <div className="h-16 bg-stone-50 rounded-lg flex flex-col items-center justify-center border border-stone-100">
+                   <p className="text-[7px] font-black text-stone-300 uppercase mb-0.5">床型配置</p>
+                   <p className="text-[9px] font-bold">特大号豪华床</p>
+                </div>
+                <div className="h-16 bg-stone-50 rounded-lg flex flex-col items-center justify-center border border-stone-100">
+                   <p className="text-[7px] font-black text-stone-300 uppercase mb-0.5">窗外景观</p>
+                   <p className="text-[9px] font-bold">全景玻璃海景</p>
+                </div>
+              </div>
+            </div>
+          );
+        case 5: // Back Cover
+           return (
+            <div className="flex flex-col h-full text-brand-ink items-center justify-center text-center">
+              <div className="w-24 h-24 mb-12 rounded-full border-[10px] border-stone-50 flex items-center justify-center opacity-20">
+                <ShieldCheck className="w-10 h-10" />
+              </div>
+              <h2 className="text-4xl font-serif italic mb-4">LUBAO</h2>
+              <p className="text-[10px] font-black text-stone-300 uppercase tracking-[0.8em] mb-20">小包团私人定制 · 尊享服务</p>
+              
+              <div className="space-y-4 border-t border-stone-50 pt-10 w-full">
+                <p className="text-[9px] font-black text-stone-400 uppercase tracking-widest">全国统一服务中心</p>
+                <p className="text-[12px] font-bold">400-888-9999</p>
+                <p className="text-[9px] font-medium text-stone-300 italic">扫码关注获取实时出单状态</p>
+              </div>
+              
+              <div className="mt-20 w-16 h-16 bg-stone-50 rounded-lg border border-stone-100 flex items-center justify-center">
+                <div className="w-10 h-10 bg-brand-ink rounded flex items-center justify-center">
+                  <div className="w-6 h-6 bg-white rounded-sm"></div>
+                </div>
+              </div>
+            </div>
+          );
+        default:
+          return null;
+      }
+    };
+
+    return (
+      <div className="min-h-screen bg-brand-bg">
+        <header className="px-6 py-6 bg-white flex items-center justify-between border-b border-stone-100 sticky top-0 z-10">
+          <div className="flex items-center gap-4">
+            <button onClick={() => setCurrentPage('DEEP_CUSTOM')} className="p-2 -ml-2 text-brand-ink">
+              <ChevronRight className="w-6 h-6 rotate-180" />
+            </button>
+            <h1 className="text-xl font-serif italic text-brand-ink">画册 PDF 预览</h1>
+          </div>
+          <button 
+            onClick={() => setCurrentPage('HOME')}
+            className="bg-brand-ink text-white px-6 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-[0.2em] shadow-lg active:scale-95 transition-all"
+          >
+            发送
+          </button>
+        </header>
+
+        <div className="p-8 bg-stone-50 flex flex-col items-center gap-6 border-b border-stone-100 overflow-hidden">
+          {/* Main Booklet Container */}
+          <div className="relative group [perspective:1000px]">
+            <motion.div 
+              key={activePdfPage}
+              initial={{ rotateY: 45, opacity: 0, scale: 0.95 }}
+              animate={{ rotateY: 0, opacity: 1, scale: 1 }}
+              transition={{ type: 'spring', damping: 20, stiffness: 100 }}
+              className="w-[300px] h-[424px] bg-white shadow-2xl rounded-sm py-12 px-8 flex flex-col border border-stone-200 relative z-10 overflow-hidden"
+            >
+              {renderPageContent()}
+            </motion.div>
+            {/* Page Shadow/Stack Effect */}
+            <div className="absolute inset-0 bg-stone-100 rounded-sm translate-x-1 translate-y-1 -z-10 shadow-lg"></div>
+            <div className="absolute inset-0 bg-stone-50 rounded-sm translate-x-2 translate-y-2 -z-20 shadow-md"></div>
+          </div>
+
+          {/* Page Indicators */}
+          <div className="flex gap-2">
+            {Array.from({ length: totalPages }).map((_, i) => (
+              <button
+                key={i}
+                onClick={() => setActivePdfPage(i + 1)}
+                className={`w-1.5 h-1.5 rounded-full transition-all ${
+                  activePdfPage === i + 1 
+                  ? 'bg-brand-ink w-6' 
+                  : 'bg-stone-200'
+                }`}
+              />
+            ))}
+          </div>
+
+          {/* Page Navigation Controls */}
+          <div className="flex gap-3">
+            <button 
+              disabled={activePdfPage === 1}
+              onClick={() => setActivePdfPage(p => p - 1)}
+              className="px-6 py-2.5 rounded-full bg-white border border-stone-200 text-[10px] font-black uppercase tracking-[0.2em] text-brand-ink disabled:opacity-30 disabled:cursor-not-allowed active:bg-stone-50 transition-all"
+            >
+              上一页
+            </button>
+            <button 
+              disabled={activePdfPage === totalPages}
+              onClick={() => setActivePdfPage(p => p + 1)}
+              className="px-6 py-2.5 rounded-full bg-brand-ink text-white text-[10px] font-black uppercase tracking-[0.2em] disabled:opacity-30 disabled:cursor-not-allowed shadow-lg active:scale-95 transition-all"
+            >
+              下一页
+            </button>
+          </div>
+        </div>
+        
+        <div className="px-6 py-12">
+          <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-stone-400 mb-8 border-b border-stone-50 pb-4">选择输出版式</h4>
+          <div className="grid grid-cols-3 gap-6">
+            <div className="aspect-[1/1.41] bg-white rounded-lg border-[3px] border-brand-ink p-2 cursor-pointer shadow-xl relative">
+              <div className="w-full h-full bg-stone-50 rounded-sm"></div>
+              <div className="absolute top-2 right-2 w-4 h-4 bg-brand-ink rounded-full flex items-center justify-center">
+                <CheckCircle2 className="w-2.5 h-2.5 text-white" />
+              </div>
+            </div>
+            <div className="aspect-[1/1.41] bg-stone-100 rounded-lg border border-stone-200 p-2 cursor-pointer opacity-40 hover:opacity-100 transition-opacity">
+              <div className="w-full h-full bg-brand-ink/5 rounded-sm"></div>
+            </div>
+            <div className="aspect-[1/1.41] bg-stone-100 rounded-lg border border-stone-200 p-2 cursor-pointer opacity-40 hover:opacity-100 transition-opacity">
+              <div className="w-full h-full bg-brand-gold/10 rounded-sm"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderItineraryEdit = () => (
+    <div className="min-h-screen bg-brand-bg pb-32">
        <header className="px-6 py-6 bg-white flex items-center justify-between border-b border-stone-100 sticky top-0 z-10">
         <div className="flex items-center gap-4">
           <button onClick={() => setCurrentPage('DEEP_CUSTOM')} className="p-2 -ml-2 text-brand-ink">
             <ChevronRight className="w-6 h-6 rotate-180" />
           </button>
-          <h1 className="text-xl font-serif italic text-brand-ink">画册 PDF 预览</h1>
+          <h1 className="text-xl font-serif italic text-brand-ink">精修每日行程</h1>
         </div>
         <button 
-          onClick={() => setCurrentPage('HOME')}
+          onClick={() => setCurrentPage('DEEP_CUSTOM')}
           className="bg-brand-ink text-white px-6 py-2.5 rounded-xl text-[11px] font-black uppercase tracking-[0.2em] shadow-lg active:scale-95 transition-all"
         >
-          SEND
+          保存
         </button>
       </header>
 
-      <div className="p-10 bg-stone-50 flex justify-center border-b border-stone-100">
-        <div className="w-full max-w-[340px] aspect-[1/1.41] bg-white shadow-3xl rounded-sm py-16 px-12 flex flex-col border border-stone-200">
-          <div className="flex justify-between items-start mb-24">
-            <div className="font-serif italic text-5xl text-stone-100 select-none">LUBAO</div>
-            <div className="text-[9px] font-black text-stone-300 uppercase tracking-[0.4em] transform rotate-90 origin-right -mt-2">SEASON 2024</div>
-          </div>
-          
-          <div className="flex-1">
-            <span className="text-[10px] font-black text-brand-gold uppercase tracking-[0.5em] mb-6 block border-b border-stone-50 pb-2">EXCLUSIVE EDITION</span>
-            <h1 className="text-5xl font-light tracking-tighter leading-[0.9] mb-10 text-brand-ink font-serif italic">
-              岛屿之诗：<br/>
-              <span className="font-black not-italic text-4xl">小包团深度漫行</span>
-            </h1>
-            <div className="w-10 h-px bg-brand-ink mb-6"></div>
-            <p className="text-[11px] text-stone-400 font-bold italic tracking-tighter">Exclusively prepared for Mr. Li & Family</p>
-          </div>
-
-          <div className="mt-auto pt-10 border-t border-stone-100">
-            <div className="flex justify-between items-end">
-              <div>
-                <p className="text-[8px] font-black text-stone-300 uppercase tracking-[0.5em] mb-2">Location</p>
-                <p className="text-xs font-black tracking-tight text-brand-ink uppercase">Xiamen, Fujian</p>
-              </div>
-              <div>
-                <p className="text-[8px] font-black text-stone-300 uppercase tracking-[0.5em] mb-2">Period</p>
-                <p className="text-xs font-black tracking-tight text-brand-ink uppercase">05 Days Plan</p>
-              </div>
-            </div>
-          </div>
+      <div className="px-6 py-8">
+        {/* Day Selector */}
+        <div className="flex gap-4 overflow-x-auto no-scrollbar mb-10 pb-2">
+          {[1, 2, 3, 4, 5].map(day => (
+            <button
+              key={day}
+              onClick={() => setActiveDay(day)}
+              className={`flex-shrink-0 w-16 h-20 rounded-[20px] flex flex-col items-center justify-center transition-all ${
+                activeDay === day 
+                ? 'bg-brand-ink text-white shadow-xl scale-110' 
+                : 'bg-white text-stone-300 border border-stone-100'
+              }`}
+            >
+              <span className="text-[10px] font-black uppercase tracking-tighter mb-1">Day</span>
+              <span className="text-2xl font-serif italic">{day}</span>
+            </button>
+          ))}
+          <button className="flex-shrink-0 w-16 h-20 rounded-[20px] border-2 border-dashed border-stone-100 flex items-center justify-center text-stone-200">
+            <PlusCircle className="w-6 h-6" />
+          </button>
         </div>
-      </div>
-      
-      <div className="px-6 py-12">
-        <h4 className="text-[10px] font-black uppercase tracking-[0.5em] text-stone-400 mb-8 border-b border-stone-50 pb-4">Select Output Layout</h4>
-        <div className="grid grid-cols-3 gap-6">
-          <div className="aspect-[1/1.41] bg-white rounded-lg border-[3px] border-brand-ink p-2 cursor-pointer shadow-xl relative">
-            <div className="w-full h-full bg-stone-50 rounded-sm"></div>
-            <div className="absolute top-2 right-2 w-4 h-4 bg-brand-ink rounded-full flex items-center justify-center">
-              <CheckCircle2 className="w-2.5 h-2.5 text-white" />
+
+        <div className="space-y-12">
+          {/* Time Segments */}
+          {['Morning / 上午', 'Afternoon / 下午', 'Evening / 晚上'].map((segment, idx) => (
+            <div key={segment} className="relative pl-10">
+              {/* Vertical Timeline line */}
+              <div className="absolute left-[11px] top-0 bottom-0 w-px bg-stone-100"></div>
+              <div className="absolute left-0 top-0 w-6 h-6 rounded-full border-2 border-brand-ink bg-white flex items-center justify-center z-10 shadow-sm">
+                <div className="w-1.5 h-1.5 bg-brand-ink rounded-full"></div>
+              </div>
+
+              <div className="mb-6">
+                <h3 className="text-[11px] font-black text-brand-ink uppercase tracking-widest mb-6 py-1 px-4 bg-stone-50 inline-block rounded-lg">{segment}</h3>
+                
+                <div className="bg-white rounded-[32px] p-8 border border-stone-200 shadow-sm space-y-8">
+                  {/* POI Section */}
+                  <div>
+                    <label className="text-[10px] font-black text-stone-300 uppercase tracking-widest block mb-4">景点安排 (POI)</label>
+                    <div className="flex flex-wrap gap-3">
+                      <div className="px-4 py-2 bg-stone-50 rounded-xl border border-stone-100 text-[12px] font-bold text-brand-ink flex items-center gap-2">
+                        {idx === 0 ? '鼓浪屿日光岩' : idx === 1 ? '菽庄花园' : '中山路步行街'}
+                        <button className="text-stone-300 hover:text-red-400">×</button>
+                      </div>
+                      <button className="px-4 py-2 border-2 border-dashed border-stone-100 rounded-xl text-[10px] font-bold text-stone-300 flex items-center gap-2">
+                        <PlusCircle className="w-3.5 h-3.5" /> 添加景点
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Description Section */}
+                  <div>
+                    <label className="text-[10px] font-black text-stone-300 uppercase tracking-widest block mb-4">活动描述</label>
+                    <textarea 
+                      placeholder="描述本阶段的内容..."
+                      className="w-full h-24 bg-stone-50/50 rounded-2xl p-4 text-[13px] font-medium outline-none resize-none border border-stone-100 placeholder:text-stone-200 focus:bg-white focus:border-brand-ink transition-colors"
+                    ></textarea>
+                  </div>
+
+                  {/* Highlights/Notes (Suggested Additions) */}
+                  <div className="grid grid-cols-2 gap-6">
+                    <div>
+                      <label className="text-[10px] font-black text-stone-300 uppercase tracking-widest block mb-4">交通方式</label>
+                      <select className="w-full bg-stone-50 rounded-xl p-3 text-[12px] font-bold text-brand-ink outline-none border border-stone-100">
+                        <option>私人房车</option>
+                        <option>轮渡</option>
+                        <option>漫步</option>
+                        <option>商务别克</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-black text-stone-300 uppercase tracking-widest block mb-4">游玩小贴士</label>
+                      <input type="text" placeholder="如：需备防晒" className="w-full bg-stone-50 rounded-xl p-3 text-[12px] font-bold text-brand-ink outline-none border border-stone-100" />
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-          <div className="aspect-[1/1.41] bg-stone-100 rounded-lg border border-stone-200 p-2 cursor-pointer opacity-40 hover:opacity-100 transition-opacity">
-            <div className="w-full h-full bg-brand-ink/5 rounded-sm"></div>
-          </div>
-          <div className="aspect-[1/1.41] bg-stone-100 rounded-lg border border-stone-200 p-2 cursor-pointer opacity-40 hover:opacity-100 transition-opacity">
-            <div className="w-full h-full bg-brand-gold/10 rounded-sm"></div>
+          ))}
+
+          {/* Fixed Footer info: Meals & Accom */}
+          <div className="bg-brand-ink rounded-[40px] p-10 shadow-2xl relative overflow-hidden text-white border-[6px] border-white">
+             <div className="absolute top-0 right-0 -mt-10 -mr-10 w-40 h-40 bg-brand-gold rounded-full blur-[80px] opacity-20"></div>
+             
+             <div className="space-y-10">
+                <section>
+                   <div className="flex items-center gap-3 mb-6">
+                      <div className="w-2 h-2 bg-brand-gold rounded-full"></div>
+                      <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-stone-400">当日膳食安排 / Meals</h4>
+                   </div>
+                   <div className="grid grid-cols-3 gap-4">
+                      {['Breakfast', 'Lunch', 'Dinner'].map(meal => (
+                        <div key={meal} className="bg-white/5 rounded-2xl p-4 border border-white/10">
+                           <p className="text-[8px] font-black text-stone-500 uppercase tracking-widest mb-1">{meal}</p>
+                           <input type="text" defaultValue="酒店内 / 私人订制" className="bg-transparent text-[11px] font-bold text-white outline-none w-full" />
+                        </div>
+                      ))}
+                   </div>
+                </section>
+
+                <section>
+                   <div className="flex items-center gap-3 mb-6">
+                      <div className="w-2 h-2 bg-brand-gold rounded-full"></div>
+                      <h4 className="text-[10px] font-black uppercase tracking-[0.4em] text-stone-400">下榻酒店 / Accommodation</h4>
+                   </div>
+                   <div className="bg-white/5 rounded-2xl p-4 border border-white/10 flex items-center justify-between">
+                      <div className="flex-1">
+                        <p className="text-[8px] font-black text-stone-500 uppercase tracking-widest mb-1">Hotel Name</p>
+                        <input type="text" defaultValue="鼓浪屿悦榕庄 (私密别墅区)" className="bg-transparent text-lg font-serif italic text-white outline-none w-full" />
+                      </div>
+                      <Edit3 className="w-5 h-5 text-brand-gold ml-4" />
+                   </div>
+                </section>
+             </div>
           </div>
         </div>
       </div>
@@ -699,6 +968,7 @@ export default function App() {
           {currentPage === 'DEEP_CUSTOM' && renderDeepCustomization()}
           {currentPage === 'DEPOSIT' && renderDeposit()}
           {currentPage === 'PDF' && renderPDFPreview()}
+          {currentPage === 'ITINERARY_EDIT' && renderItineraryEdit()}
         </motion.div>
       </AnimatePresence>
     </div>
